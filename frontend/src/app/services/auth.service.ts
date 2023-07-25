@@ -14,7 +14,6 @@ export class AuthService {
   audience = environment.auth0.audience;
   clientId = environment.auth0.clientId;
   callbackURL = environment.auth0.callbackURL;
-
   token: string;
   payload: any;
 

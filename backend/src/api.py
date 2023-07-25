@@ -12,15 +12,21 @@ setup_db(app)
 CORS(app)
 
 '''
-@TODO uncomment the following line to initialize the datbase
+@TODO uncomment the following line to initialize the database
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
+
+@app.route('/')
+def check_server():
+    return "server running"
+
 '''
+
 @TODO implement endpoint
     GET /drinks
         it should be a public endpoint
@@ -28,7 +34,20 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
-
+@app.route('/drinks')
+def get_drinks():
+    try:
+        all_drinks = Drink.query.order_by(Drink.id).all()
+        drinks = [drink.short() for drink in all_drinks]
+        return jsonify(
+            {
+                "success": True, 
+                "drinks": drinks
+            }
+        )
+    except Exception as error:
+        print(error)
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -38,6 +57,20 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail')
+def get_drinks_details():
+    try:
+        all_drinks = Drink.query.order_by(Drink.id).all()
+        drinks = [drink.long() for drink in all_drinks]
+        return jsonify(
+            {
+                "success": True, 
+                "drinks": drinks
+            }
+        ), 200
+    except Exception as error:
+        print(error)
+        abort(422)
 
 
 '''
@@ -49,7 +82,25 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['POST'])
+def create_drinks():
+    body = request.get_json()
+    title = body.get("title")
+    recipe = body.get('recipe')
+    try:
+        new_drink = Drink(title = title, recipe = json.dumps(recipe))
+        new_drink.insert()
+        abort(422)
+    
+        return jsonify(
+            {
+                "success": True, 
+                "drinks": new_drink
+            }
+        )
 
+    except:
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -102,6 +153,26 @@ def unprocessable(error):
 
 '''
 
+@app.errorhandler(404)
+def not_found(error):
+    return (
+            jsonify({
+                "success": False,
+                "error": 404,
+                "message": "resource not found"
+                }), 404
+    )
+
+@app.errorhandler(422)
+def not_found(error):
+    return (
+            jsonify({
+                "success": False,
+                "error": 422,
+                "message": "unprocessable"
+                }), 422
+    )
+
 '''
 @TODO implement error handler for 404
     error handler should conform to general task above
@@ -112,3 +183,8 @@ def unprocessable(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+
+
+# $env:FLASK_APP='api.py'
+# $env:FLASK_ENV='development'
+# python -m flask run --reload
