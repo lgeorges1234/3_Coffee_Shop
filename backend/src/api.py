@@ -51,8 +51,7 @@ def get_drinks():
                 "drinks": drinks
             }
         )
-    except Exception as error:
-        print(error)
+    except Exception:
         abort(422)
 
 '''
@@ -107,8 +106,7 @@ def create_drinks(payload):
                 "drinks": drink
             }
         ),200
-    except Exception as error:
-        print(error)
+    except Exception:
         abort(422)
 
 '''
@@ -153,7 +151,7 @@ def update_drink(payload, drink_id):
             'success': True,
             'drink': [drink.long()]
         })
-    except (KeyError, TypeError):
+    except Exception:
         abort(422)
 
 '''
@@ -192,16 +190,24 @@ def delete_drink(payload, drink_id):
 
 # Error Handling
 
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
+@app.errorhandler(400)
+def invalid_request(error):
+    return (
+            jsonify({
+                "success": False,
+                "error": 400,
+                "message": "Invalid request"
+                }), 400
+    )
 
-'''
+@app.errorhandler(AuthError)
+def authentication_failed(error):
+    """Handles authentication failed error (403)"""
+    return jsonify({
+        "success": False,
+        "error": error.status_code,
+        "message": error.error
+    }), error.status_code
 
 @app.errorhandler(404)
 def not_found(error):
@@ -209,38 +215,29 @@ def not_found(error):
             jsonify({
                 "success": False,
                 "error": 404,
-                "message": "resource not found"
+                "message": "Resource not found"
                 }), 404
     )
 
 @app.errorhandler(422)
-def not_found(error):
+def unprocessable(error):
     return (
             jsonify({
                 "success": False,
                 "error": 422,
-                "message": "unprocessable"
+                "message": "Unprocessable"
                 }), 422
     )
 
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above
-'''
-
-
-'''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above
-'''
-@app.errorhandler(AuthError)
-def authentication_failed(error):
-    """Handles authentication failed error (401)"""
-    return jsonify({
-        "success": False,
-        "error": error.status_code,
-        "message": "Authentication Failed"
-    }), 401
+@app.errorhandler(500)
+def internal_error(error):
+    return (
+            jsonify({
+                "success": False,
+                "error": 500,
+                "message": "Internal Server Error"
+                }), 500
+    )
 
 
 # $env:FLASK_APP='api.py'
